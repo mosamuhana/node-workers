@@ -4,7 +4,7 @@ import { WorkerPool } from "../src";
 
 const urls = [
 	"https://proof.ovh.net/files/100Mb.dat",
-	"https://codeload.github.com/sindresorhus/is/zip/refs/heads/main",
+	"https://example.com/unknown/path",
 ];
 
 async function main() {

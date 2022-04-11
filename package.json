@@ -25,10 +25,15 @@
   "files": [
     "dist"
   ],
-  "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"import": "./dist/index.mjs",
+			"require": "./dist/index.js"
+		}
+	},
   "scripts": {
     "build": "rollup -c && dts-bundle-generator -o dist/index.d.ts src/index.ts",
     "prebuild": "node scripts/prebuild.js",
