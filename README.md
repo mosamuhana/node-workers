@@ -22,8 +22,8 @@ import { join } from "path";
 import { WorkerPool } from '@devteks/node-workers';
 
 const urls = [
-	"https://proof.ovh.net/files/100Mb.dat",
-	"https://example.com/some/unknown/link",
+  "https://proof.ovh.net/files/100Mb.dat",
+  "https://example.com/some/unknown/link",
 ];
 
 async function main() {
@@ -32,19 +32,22 @@ async function main() {
   //   valid worker extensions .js, .mjs, .cjs, and .ts
   // - second argument is optional `maxWorkers` must be > 0
   //   if not set default to require('os').cpus().length
-	const pool = new WorkerPool<string, number>(workerFile, urls.length);
-	pool.on('message', (msg: {id: number, message: any}) => {
-        // message from worker using `notifier.notify(message)`
-		console.log(msg);
-	});
-	const results = await Promise.all(
-		urls.map((url, id) => pool.runTask(id, url))
-	);
-	results.forEach(result => {
-		if (result.error) {
-			result.error = result.error instanceof Error ? result.error.message : result.error;
-		}
-	});
+  const pool = new WorkerPool<string, number>(workerFile, urls.length);
+  pool.on('message', (msg: {id: number, message: any}) => {
+    // message from worker using `notifier.notify(message)`
+    console.log(msg);
+  });
+
+  const results = await Promise.all(
+    urls.map((url, id) => pool.runTask(id, url))
+  );
+
+  results.forEach(result => {
+    if (result.error) {
+      result.error = result.error instanceof Error ? result.error.message : result.error;
+    }
+  });
+
 	console.table(results);
 	await pool.close();
 }

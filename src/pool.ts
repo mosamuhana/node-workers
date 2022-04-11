@@ -94,14 +94,12 @@ export class WorkerPool<T = unknown, R = unknown> extends EventEmitter {
 		};
 
 		const onError = (error: any) => {
-			const taskInfo = taskWorker.taskInfo;
-			if (taskInfo) {
-				taskInfo.done(error);
+			if (taskWorker.taskInfo) {
+				taskWorker.taskInfo.done(error);
 			} else {
 				this.emit("error", error);
 			}
-			worker.off("message", onMessage);
-			worker.off("error", onError);
+			worker.removeAllListeners();
 			this.#workers.splice(this.#workers.indexOf(worker), 1);
 			this.#addNewWorker();
 		};
@@ -165,7 +163,6 @@ export class WorkerPool<T = unknown, R = unknown> extends EventEmitter {
 		await terminate(this.#workers);
 		this.#workers = [];
 	}
-
 }
 
 async function terminate(workers: any[]): Promise<void> {
