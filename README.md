@@ -15,7 +15,8 @@ import { WorkerPool, startWorker } from '@devteks/node-workers';
 
 ## Usage:
 
-# in the main thread file main.ts
+### in the main thread file main.ts
+
 ```typescript
 import { join } from "path";
 import { WorkerPool } from '@devteks/node-workers';
@@ -26,11 +27,11 @@ const urls = [
 ];
 
 async function main() {
-    const workerFile = join(__dirname, "./worker.ts");
-    // - first argument is the absolute path for the worker script file
-    //   valid worker extensions .js, .mjs, .cjs, and .ts
-    // - second argument is optional `maxWorkers` must be > 0
-    //   if not set default to require('os').cpus().length
+  const workerFile = join(__dirname, "./worker.ts");
+  // - first argument is the absolute path for the worker script file
+  //   valid worker extensions .js, .mjs, .cjs, and .ts
+  // - second argument is optional `maxWorkers` must be > 0
+  //   if not set default to require('os').cpus().length
 	const pool = new WorkerPool<string, number>(workerFile, urls.length);
 	pool.on('message', (msg: {id: number, message: any}) => {
         // message from worker using `notifier.notify(message)`
@@ -51,8 +52,8 @@ async function main() {
 main();
 ```
 
+### in the worker thread worker.ts
 
-# in the worker thread worker.ts
 ```typescript
 import { startWorker } from '@devteks/node-workers';
 
