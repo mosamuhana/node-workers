@@ -1,31 +1,41 @@
-import { parentPort, threadId, isMainThread } from "worker_threads";
+import { parentPort, isMainThread, workerData, MessagePort } from "worker_threads";
 
-import { WorkerLock } from './lock';
+import { Mutex } from "./mutex";
+import { IRequest, IResponse, IEmitter, IEvent } from "./types";
 
-export interface Notifier<T = unknown> {
-    get id(): number;
-    get data(): T | undefined | null;
-    notify(message: any): void;
-}
+export function startWorker<T = unknown, R = unknown>(fn: (notifier: IEmitter<T>) => Promise<R>) {
+	if (isMainThread) {
+		throw new Error("startWorker can only be used in a worker thread.");
+	}
 
-export function startWorker<T = unknown, R = unknown>(fn: (notifier: Notifier<T>) => Promise<R>) {
-    if (isMainThread) throw new Error('WorkerTaskRunner can only be used in a worker thread.');
-    parentPort!.on("message", async ({ id, data, port, lock }: any) => {
-        const _lock = new WorkerLock(lock);
-        const notify = (message: any) => {
-            try {
-                _lock.lock();
-                port.postMessage({ id, message });
-            } finally {
-                _lock.unlock();
-            }
-        };
-        const notifier = Object.freeze({ id, data, notify });
-        try {
-            const response = await fn(notifier);
-            parentPort!.postMessage({ id, threadId, response })
-        } catch (error) {
-            parentPort!.postMessage({ id, threadId, error });
-        }
-    });
+	const mutex = Mutex.from(workerData.lock);
+	const port: MessagePort = workerData.port;
+
+	function createEmitter<T>(data: T, request?: Record<string, any>): IEmitter<T> {
+		const emitter: IEmitter<T> = {
+			data,
+			request,
+			emit(event: string, data: any) {
+				const message: IEvent = { request, data };
+				mutex.synchronize(() => port.postMessage({ event, message }));
+			}
+		};
+
+		return Object.freeze(emitter);
+	}
+
+	parentPort!.on("message", async (input: IRequest<T>) => {
+		const { data, ...rest } = input || {};
+		const request = Object.keys(rest).length > 0 ? rest : undefined;
+		const emitter = createEmitter<T>(data as T, request);
+		const res: IResponse<R> = {};
+		request && (res.request = request);
+		try {
+			res.response = await fn(emitter);
+		} catch (e: any) {
+			res.error = new Error(e.message || e || 'Unknown error');
+			res.error.stack = e?.stack;
+		}
+		parentPort!.postMessage(res);
+	});
 }

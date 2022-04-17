@@ -1,12 +1,9 @@
 import Axios from "axios";
-
-import { startWorker } from "../src";
-
-const USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.101 Safari/537.36";
+import { startWorker } from "../../src";
 
 async function getDownloadSize(url: string) {
 	try {
-		const response = await Axios({ method: "HEAD", url, headers: { "User-Agent": USER_AGENT } });
+		const response = await Axios({ method: "HEAD", url });
 		const contentLength = response.headers["content-length"];
 		if (contentLength) {
 			const length = parseInt(contentLength, 10);
@@ -20,11 +17,11 @@ async function getDownloadSize(url: string) {
 
 startWorker<string, number>(async job => {
 	try {
-		job.notify("Start worker #" + job.id);
-		return await getDownloadSize(job.data!);
+		job.notify("Start worker #" + job.request?.id);
+		return await getDownloadSize(job.data);
 	} catch (ex) {
 		throw ex;
 	} finally {
-		job.notify("End worker #" + job.id);
+		job.notify("End worker #" + job.request?.id);
 	}
 });

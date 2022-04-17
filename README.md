@@ -3,7 +3,7 @@
 Worker threads for node.js
 
 ## how to use
-`npm install @devteks/node-workers --save` 
+`npm install @devteks/node-workers --save`
 
 ## Import:
 import:
@@ -15,40 +15,32 @@ import { WorkerPool, startWorker } from '@devteks/node-workers';
 
 ## Usage:
 
-### in the main thread file main.ts
+### in the main thread file `main.ts`
 
 ```typescript
 import { join } from "path";
-import { WorkerPool } from '@devteks/node-workers';
+import { WorkerPool, IEvent } from "../../src";
 
 const urls = [
-  "https://proof.ovh.net/files/100Mb.dat",
-  "https://example.com/some/unknown/link",
+	"https://proof.ovh.net/files/100Mb.dat",
+	"http://ipv4.download.thinkbroadband.com/200MB.zip",
+	"https://example.com/unknown/path",
 ];
 
 async function main() {
-  const workerFile = join(__dirname, "./worker.ts");
-  // - first argument is the absolute path for the worker script file
-  //   valid worker extensions .js, .mjs, .cjs, and .ts
-  // - second argument is optional `maxWorkers` must be > 0
-  //   if not set default to require('os').cpus().length
-  const pool = new WorkerPool<string, number>(workerFile, urls.length);
-  pool.on('message', (msg: {id: number, message: any}) => {
-    // message from worker using `notifier.notify(message)`
-    console.log(msg);
-  });
+	const pool = new WorkerPool<string, number>(join(__dirname, "./worker.ts"), urls.length);
+	pool.on('message', (e: IEvent) => console.log('ON MESSAGE', e.request, e.data));
 
-  const results = await Promise.all(
-    urls.map((url, id) => pool.runTask(id, url))
-  );
+	const results = await Promise.all(
+		urls.map((data, index) => pool.runTask({ data, id: index + 1 }))
+	);
 
-  results.forEach(result => {
-    if (result.error) {
-      result.error = result.error instanceof Error ? result.error.message : result.error;
-    }
-  });
+	results.forEach(result => {
+		if (result.error) result.error = result.error.message;
+	});
 
 	console.table(results);
+
 	await pool.close();
 }
 
@@ -58,7 +50,8 @@ main();
 ### in the worker thread worker.ts
 
 ```typescript
-import { startWorker } from '@devteks/node-workers';
+import Axios from "axios";
+import { startWorker, IEmitter } from "../../src";
 
 async function getDownloadSize(url: string) {
 	try {
@@ -74,14 +67,16 @@ async function getDownloadSize(url: string) {
 	throw new Error("Failed to get size");
 }
 
-startWorker<string, number>(async notifier => {
+startWorker<string, number>(async (e: IEmitter<string>) => {
 	try {
-		notifier.notify("Start worker #" + notifier.id);
-		return await getDownloadSize(notifier.data!);
-	} catch (ex) {
-		throw ex;
+		e.emit('message', "Start worker #" + e.request?.id);
+		return await getDownloadSize(e.data);
 	} finally {
-		notifier.notify("End worker #" + notifier.id);
+		e.emit('message', "End worker #" + e.request?.id);
 	}
 });
 ```
+
+------
+
+clone the repository and try examples in the `examples` folder

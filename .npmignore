@@ -1,4 +1,5 @@
 scripts
+_src*
 src
 .vscode
 rollup.config.js
