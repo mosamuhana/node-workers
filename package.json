@@ -1,7 +1,7 @@
 {
   "name": "@devteks/node-workers",
-  "version": "0.0.3",
-  "description": "Worker threads for node.js",
+  "version": "0.0.4",
+  "description": "Simple and easy to use worker pool implementation for Node.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mosamuhana/node-workers.git"
@@ -10,6 +10,9 @@
     "Worker",
     "Pool",
     "Worker Threads",
+    "Threads",
+    "Thread",
+    "Thread Pool",
     "Worker Pool",
     "Atomics"
   ],
@@ -28,15 +31,15 @@
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
-  "exports": {
-    ".": {
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js"
-    }
+	"exports": {
+		"import": "./dist/index.mjs",
+		"require": "./dist/index.js"
   },
   "scripts": {
     "prebuild": "rimraf -rf ./dist",
-    "build": "rollup -c"
+    "build": "rollup -c",
+    "prepublish": "npm run build",
+    "publish": "npm publish --access public"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^21.0.3",

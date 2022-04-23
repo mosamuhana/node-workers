@@ -1,3 +1,4 @@
+const { threadId } = require('worker_threads');
 const Axios = require('axios');
 const { startWorker } = require('../../');
 
@@ -15,13 +16,19 @@ async function getDownloadSize(url) {
 	throw new Error("Failed to get size");
 }
 
-startWorker(async job => {
+startWorker(async ({ index, url }, emit) => {
 	try {
-		job.notify("Start worker #" + job.request?.id);
-		return await getDownloadSize(job.data);
-	} catch (ex) {
-		throw ex;
+		emit('message', "Start worker #" + index);
+		let time = Date.now();
+		const size = await getDownloadSize(url);
+		time = Date.now() - time;
+		return {
+			index,
+			size,
+			time,
+			threadId,
+		};
 	} finally {
-		job.notify("End worker #" + job.request?.id);
+		emit('message', "End worker #" + index);
 	}
 });
