@@ -1,6 +1,6 @@
 {
   "name": "@devteks/node-workers",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Simple and easy to use worker pool implementation for Node.js",
   "repository": {
     "type": "git",

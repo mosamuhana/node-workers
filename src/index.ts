@@ -17,7 +17,8 @@ type Callback<T = any> = (error?: any, result?: T) => void
 type CustomWorker = Worker & { taskInfo?: TaskInfo, port: MessagePort };
 
 export interface Options {
-	workerFile: string;
+	workerFile?: string;
+	workerScript?: string;
 	maxWorkers?: number;
 	timeout?: number;
 }
@@ -76,11 +77,7 @@ export class WorkerPool extends EventEmitter {
 		super();
 
 		if (!isMainThread) {
-			throw new Error('WorkerPool can only be created in main thread');
-		}
-
-		if (!options.workerFile) {
-			throw new Error('workerFile is required');
+			//throw new Error('WorkerPool can only be created in main thread');
 		}
 
 		const maxWorkers = options.maxWorkers;
@@ -93,23 +90,26 @@ export class WorkerPool extends EventEmitter {
 			this.#maxWorkers = Math.min(CPUS * 2, maxWorkers);
 		}
 
-		const filename = options.workerFile.replace(/\\/g, "/");
-
-		if (!/\.(c|m)?js|\.ts$/i.test(filename)) {
-			throw new Error("Worker file must be `.js`, `.mjs`, `.cjs` or `.ts`.");
+		if (options.workerFile) {
+			const filename = options.workerFile.replace(/\\/g, "/");
+			if (!/\.(c|m)?js|\.ts$/i.test(filename)) {
+				throw new Error("Worker file must be `.js`, `.mjs`, `.cjs` or `.ts`.");
+			}
+			this.#eval = extname(filename).toLowerCase() === '.ts';
+			this.#scriptFile = this.#eval ? `require('ts-node').register();require("${filename}");` : filename;
+		} else if (options.workerScript) {
+			this.#scriptFile = options.workerScript;
+			this.#eval = true;
+		} else {
+			throw new Error('workerFile or workerScript must be one specified');
 		}
 
-		this.#eval = extname(filename).toLowerCase() === '.ts';
-		this.#scriptFile = this.#eval ?
-			`require('ts-node').register();require("${filename}");` :
-			filename;
-
-		let t = options.timeout;
-		if (t != null) {
-			if (!Number.isInteger(t) || t <= 0) {
+		const timeout = options.timeout;
+		if (timeout != null) {
+			if (!Number.isInteger(timeout) || timeout <= 0) {
 				throw new Error('timeout must be a positive integer');
 			}
-			this.#timeout = t;
+			this.#timeout = timeout;
 		}
 
 		for (let i = 0; i < this.#maxWorkers; i++) this.#addNewWorker();

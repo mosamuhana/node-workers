@@ -20,8 +20,10 @@ import { WorkerPool, startWorker } from '@devteks/node-workers';
 used only in main thread.
 
 ```typescript
+// you must provide `workerFile` or `workerScript` one is required
 interface Options {
-	workerFile: string;   // path to worker file (.js, mjs, .cjs and .ts)
+	workerFile?: string;   // path to worker file (.js, mjs, .cjs and .ts)
+	workerScript?: string; // script that invokes startWorker() function
 	maxWorkers?: number;  // max number of workers
 	timeout?: number;     // timeout for worker to finish task
 }
