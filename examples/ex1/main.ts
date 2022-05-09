@@ -19,7 +19,6 @@ const urls = [
 	"https://proof.ovh.net/files/100Mb.dat",
 	"https://proof.ovh.net/files/1Gb.dat",
 	"https://proof.ovh.net/files/10Gb.dat",
-
 	"http://ipv4.download.thinkbroadband.com/5MB.zip",
 	"http://ipv4.download.thinkbroadband.com/10MB.zip",
 	"http://ipv4.download.thinkbroadband.com/20MB.zip",
@@ -59,7 +58,7 @@ async function main1() {
 async function main() {
 	let workTime = Date.now();
 	const results = await WorkerPool.run<IRequest, IResponse>(
-		{ workerFile, timeout: 1500 },
+		{ workerFile, timeout: 1500, maxWorkers: 8 },
 		tasks,
 		x => console.log(x),
 	);
